@@ -15,16 +15,24 @@ export function Home() {
       </nav>
       {isConnected && (
         <>
-          <p className="text-3xl ml-5">Your balances</p>
-          <main className="grid grid-rows-3 grid-cols-3 gap-1 ml-5">
+          <p className="text-3xl ml-5 mr-5 flex flex-grow justify-center items-center bg-black text-white rounded-xl py-2">
+            Your balances
+          </p>
+          <main className="grid grid-rows-3 grid-cols-3 gap-1 ml-5 mr-5">
             {result.isFetching
               ? ""
-              : balances.map((item) => {
+              : balances.map((token) => {
                   return (
-                    <Fragment key={item.symbol}>
-                      <div>{item.symbol}</div>
-                      <div>{item.name}</div>
-                      <div>{item.balance}</div>
+                    <Fragment key={token.symbol}>
+                      <div className="text-2xl bg-black text-white border-y-2 rounded-xl p-2">
+                        {token.symbol}
+                      </div>
+                      <div className="text-xl bg-black text-white border-y-2 rounded-xl p-2">
+                        {token.name}
+                      </div>
+                      <div className="text-2xl bg-black text-white border-y-2 rounded-xl p-2">
+                        {token.balance}
+                      </div>
                     </Fragment>
                   );
                 })}
