@@ -1,13 +1,16 @@
 import { useAccount, useReadContracts } from "wagmi";
-import { balanceOfAbi } from "@/abi";
+import { ERC20Abi } from "@/abi";
 import { useState, useEffect } from "react";
 import { arbitrum, mainnet, polygon } from "wagmi/chains";
+import { useMemo } from "react";
+import { chunkArray } from "@/utils";
+import { formatUnits } from "viem";
 
-const tokenAddresses = {
+const CONTRACT_TOKEN_ADDRESSES = {
   [mainnet.id]: [
-    "0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
-    "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
-    "0xD533a949740bb3306d119CC777fa900bA034cd52", // CRV
+    "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "0xD533a949740bb3306d119CC777fa900bA034cd52",
   ],
   [arbitrum.id]: [
     "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
@@ -21,31 +24,74 @@ const tokenAddresses = {
   ],
 };
 
+type BalanceOfTokenResult = {
+  symbol: string;
+  name: string;
+  balance: string;
+};
+
 export const useReadBalanceTokens = () => {
   const { address, chainId, isConnected } = useAccount();
-
   const [contractAddresses, setContractAddresses] = useState<string[]>(
-    tokenAddresses[chainId]
+    CONTRACT_TOKEN_ADDRESSES[chainId === undefined ? 1 : chainId]
   );
 
   useEffect(() => {
     if (!isConnected) {
       return;
     }
-    setContractAddresses(tokenAddresses[chainId]);
+    setContractAddresses(CONTRACT_TOKEN_ADDRESSES[chainId]);
   }, [chainId]);
 
-  const results = useReadContracts({
-    contracts: contractAddresses.map((contractAddress) => ({
-      abi: balanceOfAbi,
-      functionName: "balanceOf",
-      address: contractAddress,
-      args: [address],
-    })),
+  const result = useReadContracts({
+    // @ts-ignore Type instantiation is excessively deep and possibly infinite. :)
+    contracts: contractAddresses
+      .map((contractAddress) => {
+        const contract = {
+          abi: ERC20Abi,
+          address: contractAddress,
+        } as const;
+
+        return [
+          {
+            ...contract,
+            functionName: "balanceOf",
+            args: [address],
+          },
+          {
+            ...contract,
+            functionName: "name",
+          },
+          {
+            ...contract,
+            functionName: "symbol",
+          },
+        ];
+      })
+      .flat(),
     refetchOnWindowFocus: false,
   });
 
+  const balances = useMemo<BalanceOfTokenResult[] | undefined>(() => {
+    if (!result.isFetched || !isConnected) {
+      return;
+    }
+
+    const chunkedArray = chunkArray(result.data, 3);
+    const balancesResult = chunkedArray.map((item) => {
+      const [{ result: balance }, { result: name }, { result: symbol }] = item;
+      return {
+        balance: formatUnits(balance, 18),
+        name,
+        symbol,
+      };
+    });
+
+    return balancesResult as BalanceOfTokenResult[];
+  }, [result]);
+
   return {
-    results,
+    result,
+    balances,
   };
 };
