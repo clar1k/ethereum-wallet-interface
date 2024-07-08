@@ -35,14 +35,6 @@ export const useReadBalanceTokens = () => {
   const [contractAddresses, setContractAddresses] = useState<string[]>(
     CONTRACT_TOKEN_ADDRESSES[chainId === undefined ? 1 : chainId]
   );
-
-  useEffect(() => {
-    if (!isConnected) {
-      return;
-    }
-    setContractAddresses(CONTRACT_TOKEN_ADDRESSES[chainId]);
-  }, [chainId]);
-
   const result = useReadContracts({
     // @ts-ignore Type instantiation is excessively deep and possibly infinite. :)
     contracts: contractAddresses
@@ -72,8 +64,20 @@ export const useReadBalanceTokens = () => {
     refetchOnWindowFocus: false,
   });
 
+  useEffect(() => {
+    if (!isConnected) {
+      return;
+    }
+    setContractAddresses(CONTRACT_TOKEN_ADDRESSES[chainId]);
+  }, [chainId]);
+
   const balances = useMemo<BalanceOfTokenResult[] | undefined>(() => {
-    if (!result.isFetched || !isConnected) {
+    if (
+      !result.isFetched ||
+      !isConnected ||
+      result.isError ||
+      result.isFetching
+    ) {
       return;
     }
 
