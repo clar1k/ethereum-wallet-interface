@@ -5,7 +5,7 @@ import { useAccount } from "wagmi";
 import { Fragment } from "react/jsx-runtime";
 
 export function Home() {
-  const { result, balances } = useReadBalanceTokens();
+  const { result, tokensData } = useReadBalanceTokens();
   const { isConnected } = useAccount();
 
   return (
@@ -21,21 +21,19 @@ export function Home() {
           <main className="grid grid-rows-3 grid-cols-3 gap-1 ml-5 mr-5">
             {result.isFetching
               ? ""
-              : balances.map((token) => {
-                  return (
-                    <Fragment key={token.symbol}>
-                      <div className="text-2xl bg-black text-white border-y-2 rounded-xl p-2">
-                        {token.symbol}
-                      </div>
-                      <div className="text-xl bg-black text-white border-y-2 rounded-xl p-2">
-                        {token.name}
-                      </div>
-                      <div className="text-2xl bg-black text-white border-y-2 rounded-xl p-2">
-                        {token.balance}
-                      </div>
-                    </Fragment>
-                  );
-                })}
+              : tokensData.map((token) => (
+                  <Fragment key={token.symbol}>
+                    <div className="text-2xl bg-black text-white border-y-2 rounded-xl p-2">
+                      {token.symbol}
+                    </div>
+                    <div className="text-xl bg-black text-white border-y-2 rounded-xl p-2">
+                      {token.name}
+                    </div>
+                    <div className="text-2xl bg-black text-white border-y-2 rounded-xl p-2">
+                      {token.balance}
+                    </div>
+                  </Fragment>
+                ))}
           </main>
         </>
       )}

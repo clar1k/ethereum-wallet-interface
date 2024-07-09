@@ -71,7 +71,7 @@ export const useReadBalanceTokens = () => {
     setContractAddresses(CONTRACT_TOKEN_ADDRESSES[chainId]);
   }, [chainId]);
 
-  const balances = useMemo<BalanceOfTokenResult[] | undefined>(() => {
+  const tokensData = useMemo<BalanceOfTokenResult[] | undefined>(() => {
     if (
       !result.isFetched ||
       !isConnected ||
@@ -81,8 +81,8 @@ export const useReadBalanceTokens = () => {
       return;
     }
 
-    const chunkedArray = chunkArray(result.data, 3);
-    const balancesResult = chunkedArray.map((item) => {
+    const chunkedTokenDataArray = chunkArray(result.data, 3);
+    const tokenData = chunkedTokenDataArray.map((item) => {
       const [{ result: balance }, { result: name }, { result: symbol }] = item;
       return {
         balance: formatUnits(balance, 18),
@@ -91,11 +91,11 @@ export const useReadBalanceTokens = () => {
       };
     });
 
-    return balancesResult as BalanceOfTokenResult[];
+    return tokenData as BalanceOfTokenResult[];
   }, [result]);
 
   return {
     result,
-    balances,
+    tokensData,
   };
 };
